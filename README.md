@@ -7,3 +7,10 @@ docker run --name container-redis -p 6379:6379 -d redis
 
 docker run --name container-mysql -p 3306:3306 -d mysql
 
+![alt text](https://github.com/jcervelin/spring-boot-cache-redis/blob/master/redis-cli-prints/redis-cli-list-keys.jpg)
+
+
+![alt text](https://github.com/jcervelin/spring-boot-cache-redis/blob/master/redis-cli-prints/redis-cli-get-value-by-key.jpg)
+
+
+
