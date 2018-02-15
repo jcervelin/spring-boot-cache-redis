@@ -19,8 +19,12 @@ public class PostController {
 
     private static final Logger log = LoggerFactory.getLogger(PostController.class);
 
-    @Autowired
     private PostService postService;
+
+    @Autowired
+    public PostController(PostService postService) {
+        this.postService = postService;
+    }
 
     @Cacheable(value = "post-single", key = "#id", unless = "#result.shares < 500")
     @GetMapping("/{id}")
@@ -30,16 +34,16 @@ public class PostController {
     }
 
     @CachePut(value = "post-single", key = "#post.id")
-    @PutMapping("/update")
-    public Post updatePostByID(@RequestBody Post post) throws PostNotFoundException {
+    @PutMapping("/")
+    public Post updatePostByID(@RequestBody Post post) {
         log.info("update post with id {}", post.getId());
         postService.updatePost(post);
         return post;
     }
 
     @CacheEvict(value = "post-single", key = "#id")
-    @DeleteMapping("/delete/{id}")
-    public void deletePostByID(@PathVariable String id) throws PostNotFoundException {
+    @DeleteMapping("/{id}")
+    public void deletePostByID(@PathVariable String id) {
         log.info("delete post with id {}", id);
         postService.deletePost(id);
     }
@@ -54,6 +58,12 @@ public class PostController {
     @GetMapping("/top/evict")
     public void evictTopPosts() {
         log.info("Evict post-top");
+    }
+
+    @GetMapping
+    public List<Post> listPosts() {
+        log.info("list all");
+        return postService.listPosts();
     }
 
 }
