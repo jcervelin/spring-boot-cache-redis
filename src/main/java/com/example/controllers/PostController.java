@@ -9,12 +9,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 @RestController
 @RequestMapping("/posts")
+@EnableScheduling
+@Transactional
 public class PostController {
 
     private static final Logger log = LoggerFactory.getLogger(PostController.class);
@@ -33,9 +38,15 @@ public class PostController {
         return postService.getPostByID(id);
     }
 
+    @PostMapping
+    public Post savePostByID(@RequestBody Post post) throws PostNotFoundException {
+        log.info("update post with id {}", post.getId());
+        return postService.savePost(post);
+    }
+
     @CachePut(value = "post-single", key = "#post.id")
-    @PutMapping("/")
-    public Post updatePostByID(@RequestBody Post post) {
+    @PutMapping
+    public Post updatePostByID(@RequestBody Post post) throws PostNotFoundException {
         log.info("update post with id {}", post.getId());
         postService.updatePost(post);
         return post;
@@ -48,13 +59,21 @@ public class PostController {
         postService.deletePost(id);
     }
 
-    @Cacheable(value = "post-top")
+    @Cacheable(value = "post-top", key = "'post'")
     @GetMapping("/top")
     public List<Post> getTopPosts() {
+        log.info("List the tops (more than 500 shares)");
         return postService.getTopPosts();
     }
 
-    @CacheEvict(value = "post-top")
+    @GetMapping("/top/names/{name}")
+    public List<Post> getTopPostsByName(@PathVariable("name") String name) {
+        log.info("List a name among the tops", name);
+        return postService.getTopPostsByName(name);
+    }
+
+    @Scheduled(fixedDelayString = "${spring.cache.fixedDelay}")
+    @CacheEvict(value = "post-top", key = "'post'")
     @GetMapping("/top/evict")
     public void evictTopPosts() {
         log.info("Evict post-top");
@@ -64,6 +83,12 @@ public class PostController {
     public List<Post> listPosts() {
         log.info("list all");
         return postService.listPosts();
+    }
+
+    @CacheEvict(value = "*", allEntries = true, key = "'*'")
+    @GetMapping("/clear")
+    public void clearCache() {
+        log.info("clear cache");
     }
 
 }
